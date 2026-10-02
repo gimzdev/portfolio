@@ -1,6 +1,6 @@
 // Generated from the settings at the top of gimzdev1.sh
 export const site = {
-  name: "Gimzdev",
+  name: "Gimz",
   url: "https://gimzdev.com",
   email: "contact@gimzdev.com",
   github: "gimzdev",
