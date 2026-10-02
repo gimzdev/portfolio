@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+.env*
+!.env.example
+.vercel
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+gimzdev1.sh
+
+.vercel
+.env*
