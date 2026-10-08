@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   openGraph: { type: "website", url: site.url, siteName: site.name, title, description, locale: "en_CA" },
   twitter: { card: "summary_large_image", title, description, creator: `@${site.x}` },
   robots: { index: true, follow: true },
+  // One icon for every device: tabs, Android, iOS home screen
+  icons: { icon: [{ url: "/icon", sizes: "192x192", type: "image/png" }], shortcut: "/icon", apple: [{ url: "/icon", sizes: "192x192", type: "image/png" }] },
 }
 
 export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0a0a0d" }

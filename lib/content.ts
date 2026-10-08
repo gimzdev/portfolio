@@ -79,6 +79,18 @@ export const projects = [
     images: ["/images/dropdate_screen1.png", "/images/dropdate_screen2.png", "/images/dropdate_screen3.png"],
     highlights: ["Personal release feed", "Event and patch tracking", "Calendar integration"],
   },
+  {
+    id: "grimoire",
+    title: "Grimoire",
+    tagline: "WoW Forever field guide",
+    description:
+      "A field guide for World of Warcraft: Forever. It has a talent calculator for every class, a searchable item and quest database with drop chances, class guides, a leveling route and planning tools for gear and raids.",
+    tags: ["Next.js", "Tailwind CSS"],
+    link: "https://wowgrimoire.app",
+    github: `https://github.com/${site.github}/grimoire`,
+    images: ["/images/grimoire_screen1.png", "/images/grimoire_screen2.png", "/images/grimoire_screen3.png"],
+    highlights: ["Talent calculator for every class", "Item and quest database with drop chances", "Leveling route, gear planner and raid composer"],
+  },
 ]
 
 // `topic` is the matching option in the contact form (see TOPICS in lib/contact.ts)

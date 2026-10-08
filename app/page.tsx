@@ -94,7 +94,7 @@ function Hero() {
       <div className="ambient" />
       <div className="wrap">
         <div className="flex flex-col items-center gap-10 lg:flex-row">
-          <div className="z-10 lg:w-[62%]">
+          <div className="z-10 flex min-h-[calc(100svh-7rem)] flex-col justify-center lg:block lg:min-h-0 lg:w-[62%]">
             <h1 className="display text-[clamp(3rem,7vw,5.5rem)]">
               <span className="block">
                 {["Hi,", "I’m"].map((w, i) => <span key={w} className="rise inline-block" style={delay(0.05 + i * 0.07)}>{w}&nbsp;</span>)}
