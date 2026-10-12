@@ -2,11 +2,7 @@ import type { SVGProps } from "react"
 
 const line = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" } as const
 const solid = { fill: "currentColor" } as const
-const icon = (d: string, style: typeof line | typeof solid = line) =>
-  function Icon(props: SVGProps<SVGSVGElement>) {
-    return <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden {...style} {...props}><path d={d} /></svg>
-  }
-
+const icon = (d: string, style: typeof line | typeof solid = line) => function Icon(props: SVGProps<SVGSVGElement>) { return <svg width={18} height={18} viewBox="0 0 24 24" aria-hidden {...style} {...props}><path d={d} /></svg> }
 export const ArrowUpRight = icon("M7 17 17 7M8 7h9v9")
 export const ArrowRight = icon("M5 12h14M13 6l6 6-6 6")
 export const ArrowDown = icon("M12 5v14M6 13l6 6 6-6")

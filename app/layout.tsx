@@ -8,38 +8,22 @@ import { Header, PointerGlow } from "@/components/client"
 
 // Mono only appears in small labels below the fold: one weight, not preloaded, so it never delays the first paint
 const mono = localFont({ src: "../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2", variable: "--font-geist-mono", preload: false, fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"] })
-
 const title = `${site.name} | ${person.role}`
 const description = "Software engineer in Montréal building web apps, tools and games. Available for new projects."
 
 export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
-  title: { default: title, template: `%s | ${site.name}` },
-  description,
-  applicationName: site.name,
-  authors: [{ name: site.name, url: site.url }],
-  alternates: { canonical: "/" },
-  openGraph: { type: "website", url: site.url, siteName: site.name, title, description, locale: "en_CA" },
-  twitter: { card: "summary_large_image", title, description, creator: `@${site.x}` },
-  robots: { index: true, follow: true },
-  // One icon for every device: tabs, Android, iOS home screen
-  icons: { icon: [{ url: "/icon", sizes: "192x192", type: "image/png" }], shortcut: "/icon", apple: [{ url: "/icon", sizes: "192x192", type: "image/png" }] },
+  metadataBase: new URL(site.url), title: { default: title, template: `%s | ${site.name}` }, description, applicationName: site.name, authors: [{ name: site.name, url: site.url }],
+  alternates: { canonical: "/" }, openGraph: { type: "website", url: site.url, siteName: site.name, title, description, locale: "en_CA" },
+  twitter: { card: "summary_large_image", title, description, creator: `@${site.x}` }, robots: { index: true, follow: true },
+  icons: { icon: [{ url: "/icon", sizes: "192x192", type: "image/png" }], shortcut: "/icon", apple: [{ url: "/icon", sizes: "192x192", type: "image/png" }] }, // one icon for every device
 }
-
 export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0a0a0d" }
 
-// Runs before first paint: dark unless the visitor picked light, and marks JS as available (no flash, no blank page without JS)
+// Before first paint: dark unless the visitor picked light, and JS marked as available (no flash, no blank page without JS)
 const boot = `try{var d=document.documentElement;d.classList.add("js");if(localStorage.getItem("theme")==="light")d.dataset.theme="light";if(localStorage.getItem("glow")==="off")d.dataset.glow="off"}catch(e){}`
-
 const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: site.name,
-  url: site.url,
-  jobTitle: person.role,
-  email: `mailto:${site.email}`,
-  address: { "@type": "PostalAddress", addressLocality: "Montréal", addressRegion: "QC", addressCountry: "CA" },
-  sameAs: [`https://github.com/${site.github}`, `https://x.com/${site.x}`],
+  "@context": "https://schema.org", "@type": "Person", name: site.name, url: site.url, jobTitle: person.role, email: `mailto:${site.email}`,
+  address: { "@type": "PostalAddress", addressLocality: "Montréal", addressRegion: "QC", addressCountry: "CA" }, sameAs: [`https://github.com/${site.github}`, `https://x.com/${site.x}`],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,9 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="grain">
         <PointerGlow />
-        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-bg">
-          Skip to content
-        </a>
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
         <Header />
         <main id="main" className="relative z-[1]">{children}</main>
         <footer className="py-10">

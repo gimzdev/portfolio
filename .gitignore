@@ -8,6 +8,3 @@ out
 *.tsbuildinfo
 next-env.d.ts
 gimzdev1.sh
-
-.vercel
-.env*
