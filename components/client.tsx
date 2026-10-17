@@ -181,7 +181,7 @@ function useSwipe(handle: (dx: number, dy: number) => void) {
   }
 }
 
-/** Projects on the left, the selected one on the right: one screenshot, three bars to switch, click for fullscreen. */
+/** Projects on the left, the selected one on the right: one screenshot, a bar for each to switch, click for fullscreen. */
 export function Projects() {
   const [active, setActive] = useState(0), [shot, setShot] = useState(0), [open, setOpen] = useState(false)
   const p = projects[active], count = p.images.length
@@ -308,7 +308,7 @@ function Lightbox({ images, index, title, onIndex, onClose }: { images: readonly
         </button>
       ))}
       {count > 1 && (
-        <div className={cn("absolute inset-x-0 bottom-0 flex justify-center gap-2 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] [@media(max-height:30rem)]:hidden", fade)}>
+        <div className={cn("absolute inset-x-0 bottom-0 flex justify-center gap-2 px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] [@media(max-height:30rem)]:hidden", fade)}>
           {images.map((src, i) => (
             <button key={src} type="button" aria-label={`Screenshot ${i + 1}`} aria-current={i === index} onClick={(e) => { e.stopPropagation(); onIndex(i) }} className={cn("relative h-12 w-20 cursor-pointer overflow-hidden rounded-lg ring-2 transition", i === index ? "ring-accent-2" : "opacity-50 ring-transparent hover:opacity-90")}>
               <Thumb src={src} />

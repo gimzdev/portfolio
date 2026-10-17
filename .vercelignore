@@ -1,4 +1,4 @@
 .env*
 node_modules
 .next
-gimzdev1.sh
+gimzdev.sh

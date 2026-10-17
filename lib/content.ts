@@ -58,14 +58,15 @@ export const projects = [
   {
     id: "mosaik",
     title: "Mosaïk",
-    tagline: "Workspace organizer",
+    tagline: "Workspace organizer for Windows",
     description:
-      "A workspace organizer that adapts to how you work, using pattern recognition and automation to tune your layouts for productivity.",
-    tags: ["React", "Python", "Docker"],
+      "A free Windows app that gives every project its own workspace: your apps and windows arranged in one click, with zones, tabs for any app and a keyboard switcher. No account and no telemetry, and your layouts stay on your computer.",
+    tags: ["Rust", "Tauri", "React", "TypeScript"],
     link: "https://mosaïk.com",
     github: `https://github.com/${site.github}/mosaik`,
-    images: ["/images/mosaik_screen1.png", "/images/mosaik_screen2.png", "/images/mosaik_screen3.png"],
-    highlights: ["Adaptive layouts", "Workflow automation", "Cross-platform"],
+    // The site, then the app: Home, a workspace, its zones, then the site's features
+    images: ["/images/mosaik_screen1.png", "/images/mosaik_screen2.png", "/images/mosaik_screen3.png", "/images/mosaik_screen4.png", "/images/mosaik_screen5.png"],
+    highlights: ["Zones and layouts for every project", "Tabs for any app", "Workspaces that open in one click"],
   },
   {
     id: "dropdate",

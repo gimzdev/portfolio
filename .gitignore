@@ -7,4 +7,4 @@ out
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
-gimzdev1.sh
+gimzdev.sh
