@@ -1,7 +1,7 @@
 import { site } from "@/lib/site"
 
 // ═════════════════════════ CONTENT ═════════════════════════
-// Everything the site says lives here. Change the words, run ./v1.sh, done.
+// Everything the site says lives here. Change the words, run ./gimzdev.sh, done.
 
 export const person = {
   role: "Software Developer",
@@ -64,7 +64,7 @@ export const projects = [
     tags: ["Rust", "Tauri", "React", "TypeScript"],
     link: "https://mosaïk.com",
     github: `https://github.com/${site.github}/mosaik`,
-    // The site, then the app: Home, a workspace, its zones, then the site's features
+    // The site first (its top, its features), then the app (Home, a workspace, its zones)
     images: ["/images/mosaik_screen1.png", "/images/mosaik_screen2.png", "/images/mosaik_screen3.png", "/images/mosaik_screen4.png", "/images/mosaik_screen5.png"],
     highlights: ["Zones and layouts for every project", "Tabs for any app", "Workspaces that open in one click"],
   },
