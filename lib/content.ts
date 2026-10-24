@@ -85,12 +85,13 @@ export const projects = [
     title: "Grimoire",
     tagline: "WoW Forever field guide",
     description:
-      "A field guide for World of Warcraft: Forever. It has a talent calculator for every class, a searchable item and quest database with drop chances, class guides, a leveling route and planning tools for gear and raids.",
-    tags: ["Next.js", "Tailwind CSS"],
+      "A field guide for World of Warcraft: Forever, with a talent calculator for every class, a database of items, quests, zones and dungeons with drop chances, class guides, a leveling route and a raid composer. Its in-game add-on brings your build, what to train and dungeon loot into the game.",
+    tags: ["Next.js", "TypeScript", "PostgreSQL", "Lua"],
     link: "https://wowgrimoire.app",
     github: `https://github.com/${site.github}/grimoire`,
-    images: ["/images/grimoire_screen1.png", "/images/grimoire_screen2.png", "/images/grimoire_screen3.png"],
-    highlights: ["Talent calculator for every class", "Item and quest database with drop chances", "Leveling route, gear planner and raid composer"],
+    // Home, what Forever adds, the talent calculator, the item database, then a zone (Mount Hyjal)
+    images: ["/images/grimoire_screen1.png", "/images/grimoire_screen2.png", "/images/grimoire_screen3.png", "/images/grimoire_screen4.png", "/images/grimoire_screen5.png"],
+    highlights: ["Talent calculator for every class", "Item, quest and zone database with drop chances", "In-game add-on for WoW Forever"],
   },
 ]
 

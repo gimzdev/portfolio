@@ -17,6 +17,8 @@ Portfolio site and project index.
 </tr>
 </table>
 
+<hr>
+
 This is my portfolio and the index of everything I build. It shows the projects with screenshots and
 links, what I can do for a client and roughly what it costs, and who I am. I make web apps and games, and
 take on consulting and fixes for existing codebases.
