@@ -6,6 +6,8 @@ Portfolio site and project index.
 
 [gimzdev.com](https://gimzdev.com) · Next.js · TypeScript · Tailwind CSS · Three.js
 
+<img src="docs/screenshots/gimzdev-preview.gif" alt="gimzdev.com, from the top to the projects">
+
 <table>
 <tr>
 <td align="center" width="50%"><img src="docs/screenshots/gimzdev-hero.png" alt="Hero"><br><sub>Hero</sub></td>
@@ -17,13 +19,15 @@ Portfolio site and project index.
 </tr>
 </table>
 
-This is my portfolio and the index of everything I build. It shows the projects with screenshots and
-links, what I can do for a client and roughly what it costs, and who I am. I make web apps and games, and
+<hr>
+
+This is my portfolio and the index of everything I build. It shows the projects with a clip, screenshots
+and links, what I can do for a client and roughly what it costs, and who I am. I make web apps and games, and
 take on consulting and fixes for existing codebases.
 
 | | |
 |:---|:---|
-| **Work** | MetaForge, Mosaïk, Dropdate and Grimoire, with screenshots and links |
+| **Work** | Mosaïk, Dropdate, MetaForge and Grimoire, each with a short clip, screenshots and links |
 | **Services** | Websites, web apps, fixes and updates, with typical prices and timelines |
 | **About** | Background, skills and a career timeline |
 | **Contact** | A message form, email, GitHub, X and Discord |

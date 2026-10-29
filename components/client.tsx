@@ -148,8 +148,12 @@ export function HeroOrb() {
 // which srcset width the browser picked, so it can't be trusted for layout
 const FIT = { panel: "w-[min(100%,70svh*var(--r))]", full: "w-[min(100cqw,100cqh*var(--r))]" }
 
+const isClip = (src: string) => src.endsWith(".mp4")
+
 function Shot({ src, title, fit, sizes, className, onLoaded, onClick }: { src: string; title: string; fit: keyof typeof FIT; sizes: string; className?: string; onLoaded?: () => void; onClick?: React.MouseEventHandler<HTMLElement> }) {
   const [ratio, setRatio] = useState(0) // width / height once loaded, -1 when the file is missing
+  if (ratio > -1 && isClip(src))
+    return <Clip src={src} title={title} onClick={onClick} onRatio={setRatio} onLoaded={onLoaded} style={{ "--r": ratio || undefined } as React.CSSProperties} className={cn("h-auto", FIT[fit], !ratio && "invisible", className)} />
   if (ratio < 0)
     return (
       <div role="img" aria-label={`${title} preview`} onClick={onClick} className={cn("grid aspect-[16/10] w-[40rem] max-w-full place-items-center rounded-xl bg-[linear-gradient(135deg,var(--accent-soft),transparent),var(--surface-2)]", className)}>
@@ -162,9 +166,30 @@ function Shot({ src, title, fit, sizes, className, onLoaded, onClick }: { src: s
   )
 }
 
+/** A short clip in a screenshot's place: muted, looping and inline, paused with reduced motion. It can load before the page
+ * is hydrated, so its size and first frame are also read when it mounts. */
+function Clip({ src, title, className, style, onClick, onRatio, onLoaded }: { src: string; title: string; className: string; style: React.CSSProperties; onClick?: React.MouseEventHandler<HTMLElement>; onRatio: (r: number) => void; onLoaded?: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null), told = useRef(false)
+  const sized = (v: HTMLVideoElement) => onRatio(v.videoWidth / v.videoHeight || 1.6)
+  const ready = () => { if (!told.current) { told.current = true; onLoaded?.() } }
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    v.muted = true
+    if (v.readyState >= 1) sized(v)
+    if (v.readyState >= 2) ready()
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {})
+  }, [])
+  return (
+    <video ref={ref} src={src} aria-label={`${title}, a short clip`} muted loop playsInline preload="auto" onClick={onClick} onLoadedMetadata={(e) => sized(e.currentTarget)} onLoadedData={ready}
+      onError={() => { onRatio(-1); ready() }} style={style} className={className} />
+  )
+}
+
 function Thumb({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) return <span aria-hidden className="block size-full bg-accent-soft" />
+  if (isClip(src)) return <video src={`${src}#t=0.5`} muted playsInline preload="metadata" aria-hidden onError={() => setFailed(true)} className="absolute inset-0 size-full object-cover object-top" />
   return <Image src={src} alt="" fill sizes="140px" onError={() => setFailed(true)} className="object-cover object-top" />
 }
 
@@ -234,17 +259,23 @@ export function Projects() {
             </button>
           ))}
         </div>
-        <div key={p.id} className="fade mt-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-xl">
-            <h3 className="text-xl font-medium tracking-tight">{p.title}</h3>
-            <p className="mt-2 leading-relaxed text-muted">{p.description}</p>
-            <ul className="mt-4 flex flex-wrap gap-2" aria-label="Built with">{p.tags.map((t) => <li key={t} className="chip">{t}</li>)}</ul>
+        {/* Every project's text is in the page, the others hidden: search engines read all four, not only the first */}
+        {projects.map((x, i) => (
+          <div key={x.id} hidden={active !== i}>
+            <div className="fade mt-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+              <div className="max-w-xl">
+                <h3 className="text-xl font-medium tracking-tight">{x.title}</h3>
+                <p className="mt-2 leading-relaxed text-muted">{x.description}</p>
+                <ul className="mt-4 flex flex-wrap gap-2" aria-label="Built with">{x.tags.map((t) => <li key={t} className="chip">{t}</li>)}</ul>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-3">
+                {x.action && <a href={x.action.href} target="_blank" rel="noopener noreferrer" className="btn btn-primary">{x.action.label} <ArrowUpRight className="size-4" /></a>}
+                <a href={x.link} target="_blank" rel="noopener noreferrer" className={cn("btn", x.action ? "btn-ghost" : "btn-primary")}>Visit <ArrowUpRight className="size-4" /></a>
+                <a href={x.github} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Github className="size-4" /> Source</a>
+              </div>
+            </div>
           </div>
-          <div className="flex shrink-0 gap-3">
-            <a href={p.link} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Visit <ArrowUpRight className="size-4" /></a>
-            <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Github className="size-4" /> Source</a>
-          </div>
-        </div>
+        ))}
       </div>
       {open && <Lightbox images={p.images} index={shot} title={p.title} onIndex={setShot} onClose={close} />}
     </div>

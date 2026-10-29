@@ -7,12 +7,20 @@ export const person = {
   role: "Software Developer",
   location: "Montréal, QC",
   started: 2016, // first professional year
-  greeting: "Welcome to my portfolio.",
+  headline: "Software developer in Montréal", // under your name in the big title, and in the browser tab: what you do and where, in the words people search
   lead: "Building interfaces for productivity & gaming. Working on both open source projects and enterprise solutions.",
   bio: [
     "I built web applications for enterprise clients at Xdemat for eight years: data management, integrations and a lot of UI.",
-    `Since then I've been on my own as ${site.name}, building my own products, contributing to open source and taking on client projects.`,
+    `Since then I’ve been on my own as ${site.name}, building my own products, contributing to open source and taking on client projects.`,
   ],
+}
+
+// Each section: a small label (the same word as the menu) above a heading that says what the section holds, in the words people search
+export const sections = {
+  work: { label: "Work", title: "Gaming and productivity apps" },
+  services: { label: "Services", title: "Websites, web\u00a0apps and fixes", intro: "Typical ranges in USD. The final price depends on the project." },
+  about: { label: "About", title: "Independent software developer" },
+  contact: { label: "Contact", title: "Let’s talk about your project", intro: "Have a project in mind, a question, or something to fix? Email me or use the form and I’ll get back to you soon." },
 }
 
 export const skillGroups = [
@@ -44,53 +52,57 @@ export const experience = [
 
 export const projects = [
   {
-    id: "metaforge",
-    title: "MetaForge",
-    tagline: "Tools for Tacticians",
-    description:
-      "A TFT analytics and prediction platform where players vote on comps and techs. It has two ranking systems: League Points for competitive performance and Prediction Points for forecasting accuracy.",
-    tags: ["React", "TypeScript", "Node.js", "PostgreSQL"],
-    link: "https://metaforge.lol",
-    github: `https://github.com/${site.github}/metaforge`,
-    images: ["/images/metaforge_screen1.png", "/images/metaforge_screen2.png", "/images/metaforge_screen3.png"],
-    highlights: ["Dual ranking system (LP and PP)", "Real-time analytics", "Team composition voting"],
-  },
-  {
     id: "mosaik",
     title: "Mosaïk",
-    tagline: "Workspace organizer for Windows",
+    tagline: "Window manager for Windows",
     description:
-      "A free Windows app that gives every project its own workspace: your apps and windows arranged in one click, with zones, tabs for any app and a keyboard switcher. No account and no telemetry, and your layouts stay on your computer.",
+      "A free Windows app that gives every project its own workspace: apps snap into numbered, coloured zones, any windows can share a tab strip, and a whole workspace comes back in one click. On the Microsoft Store, with no account and no telemetry.",
     tags: ["Rust", "Tauri", "React", "TypeScript"],
     link: "https://mosaïk.com",
     github: `https://github.com/${site.github}/mosaik`,
-    // The site first (its top, its features), then the app (Home, a workspace, its zones)
-    images: ["/images/mosaik_screen1.png", "/images/mosaik_screen2.png", "/images/mosaik_screen3.png", "/images/mosaik_screen4.png", "/images/mosaik_screen5.png"],
+    // The first button: where to get it (Visit and Source follow)
+    action: { label: "Download", href: "https://apps.microsoft.com/detail/9PHR0L7S1QVD" },
+    // A clip (windows moved into zones), the site (its top, its features), then the app (Home, a workspace, its zones)
+    images: ["/media/mosaik/mosaik-preview.mp4", "/media/mosaik/mosaik-site.png", "/media/mosaik/mosaik-site-features.png", "/media/mosaik/mosaik-app-home.png", "/media/mosaik/mosaik-app-workspace.png", "/media/mosaik/mosaik-app-zones.png"],
     highlights: ["Zones and layouts for every project", "Tabs for any app", "Workspaces that open in one click"],
   },
   {
     id: "dropdate",
     title: "Dropdate",
-    tagline: "Gaming calendar",
+    tagline: "Game release calendar",
     description:
-      "A calendar for game releases, patches, events and community milestones, with a personalized feed and notifications.",
-    tags: ["Next.js", "Tailwind CSS", "MongoDB"],
+      "Every game release and esports tournament in one calendar. Search it in plain English, keep a wishlist, and add any view to Google, Apple or Outlook calendars so it follows a game when the date slips. With a free API, no key needed.",
+    tags: ["Next.js", "TypeScript", "PostgreSQL"],
     link: "https://dropdate.net",
     github: `https://github.com/${site.github}/dropdate`,
-    images: ["/images/dropdate_screen1.png", "/images/dropdate_screen2.png", "/images/dropdate_screen3.png"],
-    highlights: ["Personal release feed", "Event and patch tracking", "Calendar integration"],
+    images: ["/media/dropdate/dropdate-preview.mp4", "/media/dropdate/dropdate-home.png", "/media/dropdate/dropdate-this-week.png", "/media/dropdate/dropdate-calendar.png"],
+    highlights: ["Releases and tournaments in one calendar", "Plain-English search and a wishlist", "Free JSON and iCalendar API"],
+  },
+  {
+    id: "metaforge",
+    title: "MetaForge",
+    tagline: "Tools for Tacticians",
+    description:
+      "Teamfight Tactics tier lists, a stats explorer and a team builder, graded from high-elo ranked games on the live patch, so the tier lists move when the game does.",
+    tags: ["Next.js", "TypeScript", "PostgreSQL"],
+    link: "https://metaforge.lol",
+    github: `https://github.com/${site.github}/metaforge`,
+    images: ["/media/metaforge/metaforge-preview.mp4", "/media/metaforge/metaforge-home.png", "/media/metaforge/metaforge-stats-explorer.png", "/media/metaforge/metaforge-team-builder.png"],
+    highlights: ["Tier lists from real ranked games", "Stats explorer", "Team builder with shareable links"],
   },
   {
     id: "grimoire",
     title: "Grimoire",
     tagline: "WoW Forever field guide",
     description:
-      "A field guide for World of Warcraft: Forever. It has a talent calculator for every class, a searchable item and quest database with drop chances, class guides, a leveling route and planning tools for gear and raids.",
-    tags: ["Next.js", "Tailwind CSS"],
+      "A field guide for World of Warcraft: Forever, with a talent calculator for every class, a database of items, quests, zones and dungeons with drop chances, class guides, a leveling route and a raid composer. Its in-game add-on brings your build, what to train and dungeon loot into the game.",
+    tags: ["Next.js", "TypeScript", "PostgreSQL", "Lua"],
     link: "https://wowgrimoire.app",
     github: `https://github.com/${site.github}/grimoire`,
-    images: ["/images/grimoire_screen1.png", "/images/grimoire_screen2.png", "/images/grimoire_screen3.png"],
-    highlights: ["Talent calculator for every class", "Item and quest database with drop chances", "Leveling route, gear planner and raid composer"],
+    action: { label: "Get the add-on", href: "https://www.curseforge.com/wow/addons/grimoire-field-guide" },
+    // A clip (the talent calculator), Home, what Forever adds, the talent calculator, the item database, then a zone (Mount Hyjal)
+    images: ["/media/grimoire/grimoire-preview.mp4", "/media/grimoire/grimoire-home.png", "/media/grimoire/grimoire-whats-new.png", "/media/grimoire/grimoire-talent-calculator.png", "/media/grimoire/grimoire-item-database.png", "/media/grimoire/grimoire-mount-hyjal.png"],
+    highlights: ["Talent calculator for every class", "Item, quest and zone database with drop chances", "In-game add-on for WoW Forever"],
   },
 ]
 
@@ -101,8 +113,8 @@ export const services = [
     topic: "website",
     title: "Websites",
     blurb: "Fast, responsive sites that work on every device.",
-    price: "$800 – $3,000",
-    duration: "1–3 weeks",
+    price: "$500 – $1,500",
+    duration: "1–2 weeks",
     features: ["Responsive design", "Contact forms", "Basic SEO", "Easy to update"],
   },
   {
@@ -110,8 +122,8 @@ export const services = [
     topic: "web-app",
     title: "Web apps",
     blurb: "Interactive applications with accounts, a database and an admin.",
-    price: "$2,000 – $8,000",
-    duration: "3–8 weeks",
+    price: "$1,500 – $5,000",
+    duration: "2–5 weeks",
     features: ["User accounts", "Database and API", "Admin panel", "Payments and real-time"],
   },
   {
@@ -119,7 +131,7 @@ export const services = [
     topic: "fix",
     title: "Fixes & updates",
     blurb: "Bug fixes, new features and improvements to an existing codebase.",
-    price: "$100 / hour",
+    price: "$80 / hour",
     duration: "As needed",
     features: ["Bug fixes", "New features", "Performance and security", "Quick turnaround"],
   },

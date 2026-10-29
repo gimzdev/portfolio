@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { GeistSans } from "geist/font/sans"
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { site } from "@/lib/site"
 import { person } from "@/lib/content"
@@ -8,8 +9,9 @@ import { Header, PointerGlow } from "@/components/client"
 
 // Mono only appears in small labels below the fold: one weight, not preloaded, so it never delays the first paint
 const mono = localFont({ src: "../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2", variable: "--font-geist-mono", preload: false, fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"] })
-const title = `${site.name} | ${person.role}`
-const description = "Software engineer in Montréal building web apps, tools and games. Available for new projects."
+const title = `${site.name} | ${person.headline}`
+// The same words as the title and the big heading ("Software developer in Montréal"): one page, one search phrase
+const description = `${person.headline} building web apps, tools and games. Available for new projects.`
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url), title: { default: title, template: `%s | ${site.name}` }, description, applicationName: site.name, authors: [{ name: site.name, url: site.url }],
@@ -47,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </p>
           </div>
         </footer>
+        <Analytics />
       </body>
     </html>
   )

@@ -1,5 +1,5 @@
 import { preload } from "react-dom"
-import { experience, person, services, skillGroups } from "@/lib/content"
+import { experience, person, sections, services, skillGroups } from "@/lib/content"
 import { site } from "@/lib/site"
 import { ArrowDown, ArrowRight, Check, Discord, Github, X } from "@/components/icons"
 import { ContactForm, CopyEmail, HeroOrb, Projects, Reveal, StartButton } from "@/components/client"
@@ -11,8 +11,8 @@ export default function Page() {
   return (
     <>
       <Hero />
-      <Section id="work" title="Projects" label="Work" className="overflow-x-clip"><Projects /></Section>
-      <Section id="services" title="Services" label="Freelance" intro="Typical ranges in USD. The final price depends on the project.">
+      <Section id="work" {...sections.work} className="overflow-x-clip"><Projects /></Section>
+      <Section id="services" {...sections.services}>
         <div className="reveal grid gap-12 md:grid-cols-3 md:gap-10">
           {services.map((s) => (
             <div key={s.id} className="flex flex-col border-t border-line-strong pt-6 transition-colors duration-300 hover:border-accent">
@@ -26,10 +26,10 @@ export default function Page() {
           ))}
         </div>
       </Section>
-      <Section id="about" title="About" label="Background">
+      <Section id="about" {...sections.about}>
         <div className="grid gap-16 lg:grid-cols-12">
           <div className="reveal lg:col-span-7">
-            <p className="text-xl leading-relaxed tracking-tight md:text-2xl md:leading-relaxed">{person.bio[0]}</p>
+            <p className="text-xl leading-relaxed tracking-tight text-pretty md:text-2xl md:leading-relaxed">{person.bio[0]}</p>
             {person.bio.slice(1).map((t) => <p key={t} className="mt-5 max-w-xl leading-relaxed text-muted">{t}</p>)}
             <div className="mt-10 space-y-5">
               {skillGroups.map((g) => (
@@ -53,7 +53,7 @@ export default function Page() {
           </ol>
         </div>
       </Section>
-      <Section id="contact" title="Contact" intro={<>Have a project in mind, a question, or something to fix? Email me or use the form and I&rsquo;ll get back to you soon.</>}>
+      <Section id="contact" {...sections.contact}>
         <div className="grid gap-14 lg:grid-cols-12">
           <div className="reveal lg:col-span-6">
             <CopyEmail email={site.email} />
@@ -81,8 +81,10 @@ function Hero() {
               <span className="block">
                 {["Hi,", "I’m"].map((w, i) => <span key={w} className="rise inline-block" style={delay(0.05 + i * 0.07)}>{w}&nbsp;</span>)}
                 <span className="rise gradient-text inline-block" style={delay(0.2)}>{site.name}</span>
+                {/* Read as one sentence by search engines and screen readers: "Hi, I’m Gimz, software developer in Montréal." */}
+                <span className="sr-only">, </span>
               </span>
-              <span className="rise mt-2 block text-[0.58em] whitespace-nowrap" style={delay(0.32)}>{person.greeting}</span>
+              <span className="rise mt-2 block text-[0.58em] text-balance" style={delay(0.32)}>{person.headline}.</span>
             </h1>
             <p className="rise mt-8 max-w-2xl text-xl leading-relaxed text-muted md:text-2xl" style={delay(0.42)}>{person.lead}</p>
             <div className="rise mt-10 flex flex-col gap-3 sm:flex-row" style={delay(0.52)}>
@@ -99,13 +101,14 @@ function Hero() {
   )
 }
 
-function Section({ id, title, label, intro, className = "", children }: { id: string; title: string; label?: string; intro?: React.ReactNode; className?: string; children: React.ReactNode }) {
+// The small label names the section, the heading says what it holds (both come from `sections` in lib/content.ts)
+function Section({ id, title, label, intro, className = "", children }: { id: string; title: string; label: string; intro?: React.ReactNode; className?: string; children: React.ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-title`} className={`py-20 md:py-28 ${className}`}>
       <div className="wrap">
         <div className="reveal mb-10 md:mb-14">
-          {label && <p className="label mb-4">{label}</p>}
-          <h2 id={`${id}-title`} className="display-m text-3xl md:text-5xl">{title}</h2>
+          <p className="label mb-4">{label}</p>
+          <h2 id={`${id}-title`} className="display-m max-w-3xl text-3xl text-balance md:text-4xl">{title}</h2>
           {intro && <p className="mt-3 max-w-xl text-muted">{intro}</p>}
         </div>
         {children}
