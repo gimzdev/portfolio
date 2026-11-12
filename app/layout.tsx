@@ -1,19 +1,21 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { GeistSans } from "geist/font/sans"
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { site } from "@/lib/site"
 import { person } from "@/lib/content"
-import { Header, PointerGlow } from "@/components/client"
+import { Header, PointerGlow, SiteFooter } from "@/components/client"
 
 // Mono only appears in small labels below the fold: one weight, not preloaded, so it never delays the first paint
 const mono = localFont({ src: "../node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2", variable: "--font-geist-mono", preload: false, fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"] })
-const title = `${site.name} | ${person.role}`
-const description = "Software engineer in Montréal building web apps, tools and games. Available for new projects."
+const title = `${site.name} | ${person.en.headline}`
+// The same words as the title and the big heading ("Software developer in Montréal"): one page, one search phrase
+const description = `${person.en.headline} building fast, data-heavy web apps and companion tools for games, communities and startups. Available for new projects.`
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url), title: { default: title, template: `%s | ${site.name}` }, description, applicationName: site.name, authors: [{ name: site.name, url: site.url }],
-  alternates: { canonical: "/" }, openGraph: { type: "website", url: site.url, siteName: site.name, title, description, locale: "en_CA" },
+  alternates: { canonical: "/", languages: { "en-CA": "/", "fr-CA": "/fr", "x-default": "/" } }, openGraph: { type: "website", url: site.url, siteName: site.name, title, description, locale: "en_CA" },
   twitter: { card: "summary_large_image", title, description, creator: `@${site.x}` }, robots: { index: true, follow: true },
   icons: { icon: [{ url: "/icon", sizes: "192x192", type: "image/png" }], shortcut: "/icon", apple: [{ url: "/icon", sizes: "192x192", type: "image/png" }] }, // one icon for every device
 }
@@ -38,15 +40,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
         <Header />
         <main id="main" className="relative z-[1]">{children}</main>
-        <footer className="py-10">
-          <div className="wrap flex flex-col items-center justify-between gap-4 text-sm text-muted sm:flex-row">
-            <p>© {new Date().getFullYear()} {site.name}dev</p>
-            <p className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
-              <a href={site.repo} target="_blank" rel="noopener noreferrer" className="transition hover:text-fg">Source</a>
-              <a href="#top" className="transition hover:text-fg">Back to top ↑</a>
-            </p>
-          </div>
-        </footer>
+        <SiteFooter />
+        <Analytics />
       </body>
     </html>
   )

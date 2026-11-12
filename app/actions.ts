@@ -3,7 +3,7 @@
 import nodemailer, { type Transporter } from "nodemailer"
 import { headers } from "next/headers"
 import { after } from "next/server"
-import { TOPICS, validateContact } from "@/lib/contact"
+import { BUDGETS, TIMELINES, TOPICS, validateContact } from "@/lib/contact"
 import { site } from "@/lib/site"
 
 export type ContactResult = { ok: true } | { ok: false; error: string }
@@ -54,7 +54,8 @@ export async function sendContact(input: unknown): Promise<ContactResult> {
   const port = Number(EMAIL_PORT) || 587, secure = EMAIL_SECURE === "true", account = `${user} at ${host}:${port}`, from = EMAIL_FROM || site.email
   // Short timeouts: a stuck connection fails in seconds with a clear log line, instead of hanging the form
   const smtp = (mailer ??= nodemailer.createTransport({ host, port, secure, requireTLS: !secure, auth: { user, pass }, connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 20_000 }))
-  const { name, email, message } = data, topic = TOPICS.find((t) => t.id === data.topic)?.label
+  const { name, email, message } = data, topic = TOPICS.find((t) => t.id === data.topic)?.en, fr = data.lang === "fr"
+  const extra = [BUDGETS.find((b) => b.id === data.budget)?.en && `Budget: ${BUDGETS.find((b) => b.id === data.budget)?.en}`, TIMELINES.find((x) => x.id === data.timeline)?.en && `Timeline: ${TIMELINES.find((x) => x.id === data.timeline)?.en}`, fr && "Wrote from the French page"].filter(Boolean).join(" · ")
   const first = /^[\p{L}\p{M}' .-]{1,40}$/u.test(name) ? name.split(" ")[0] : "there" // never echo links or other junk to a stranger's inbox
   const when = new Date().toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Toronto" }), domain = site.url.replace(/^https?:\/\//, "")
 
@@ -62,9 +63,10 @@ export async function sendContact(input: unknown): Promise<ContactResult> {
   // read as a list of recipients
   try {
     await smtp.sendMail({ from: { name: `${site.name} Portfolio`, address: from }, to: EMAIL_TO || site.email, replyTo: { name, address: email }, subject: `New message from ${name}${topic ? ` · ${topic}` : ""}`,
-      text: `New message from ${name} <${email}>${topic ? `\nAbout: ${topic}` : ""}\n\n${message}\n\n${when}`,
+      text: `New message from ${name} <${email}>${topic ? `\nAbout: ${topic}` : ""}${extra ? `\n${extra}` : ""}\n\n${message}\n\n${when}`,
       html: shell(`${name}: ${message}`.slice(0, 110), `${title(esc(name))}
 <div style="margin:4px 0 0;font:15px ${FONT}">${link(`mailto:${email}`, esc(email))}${topic ? `<span style="color:#8a869a"> &nbsp;&middot;&nbsp; ${esc(topic)}</span>` : ""}</div>
+${extra ? `<div style="margin:6px 0 0;font:14px ${FONT};color:#8a869a">${esc(extra)}</div>` : ""}
 <div style="margin:22px 0 0">${box(message)}</div>
 <div style="margin:22px 0 0;font:600 15px ${FONT}">${link(`mailto:${email}?subject=${encodeURIComponent(`Re: ${topic || "your message"}`)}`, "Reply &rarr;")}</div>`, `Sent from the contact form on ${esc(domain)} &middot; ${esc(when)}`) })
   } catch (error) {
@@ -73,11 +75,12 @@ export async function sendContact(input: unknown): Promise<ContactResult> {
   }
   console.info(`Contact form: sent (${account})`)
   // The visitor's confirmation is a courtesy: it goes out after the response, only once yours did, and a bounce never fails the form
-  after(() => smtp.sendMail({ from: { name: site.name, address: from }, to: { name: "", address: email }, subject: "Thanks for your message",
-    text: `Hi ${first},\n\nThanks for reaching out. I've got your message and will reply as soon as I can.\n\nYour message:\n${message}\n\n${site.name}\n${site.url}`,
-    html: shell("Got it. I'll reply as soon as I can.", `${title(`Thanks, ${esc(first)}.`)}
-<p style="margin:10px 0 0;font:16px/1.65 ${FONT};color:#4a4658">I&rsquo;ve got your message and will reply as soon as I can.</p>
-<div style="margin:26px 0 8px;font:600 12px ${FONT};color:#8a869a">Your message</div>
+  after(() => smtp.sendMail({ from: { name: site.name, address: from }, to: { name: "", address: email }, subject: fr ? "Merci pour votre message" : "Thanks for your message",
+    text: fr ? `Bonjour ${first === "there" ? "" : first},\n\nMerci de votre message. Je l’ai bien reçu et je vous réponds en moins d’un jour.\n\nVotre message :\n${message}\n\n${site.name}\n${site.url}`
+      : `Hi ${first},\n\nThanks for reaching out. I've got your message and will answer within a day.\n\nYour message:\n${message}\n\n${site.name}\n${site.url}`,
+    html: shell(fr ? "Bien reçu. Je vous réponds en moins d’un jour." : "Got it. I'll answer within a day.", `${title(fr ? `Merci${first === "there" ? "" : `, ${esc(first)}`}.` : `Thanks, ${esc(first)}.`)}
+<p style="margin:10px 0 0;font:16px/1.65 ${FONT};color:#4a4658">${fr ? "J&rsquo;ai bien re&ccedil;u votre message et je vous r&eacute;ponds en moins d&rsquo;un jour." : "I&rsquo;ve got your message and will answer within a day."}</p>
+<div style="margin:26px 0 8px;font:600 12px ${FONT};color:#8a869a">${fr ? "Votre message" : "Your message"}</div>
 ${box(message.length > 700 ? `${message.slice(0, 700)}…` : message)}
 <p style="margin:26px 0 0;font:15px ${FONT};color:#1b1926">${esc(site.name)}<br>${link(site.url, esc(domain))}</p>`, `You&rsquo;re getting this because this address was used on the contact form at ${esc(domain)}. Reply to this email if you want to add something.`) })
     .catch((error) => console.warn(`Contact form: the confirmation to the visitor was not sent (${account}): ${smtpError(error, user, pass)}`)))

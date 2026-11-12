@@ -3,9 +3,11 @@
 import Image from "next/image"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
+import { usePathname } from "next/navigation"
+import { track } from "@vercel/analytics"
 import { sendContact } from "@/app/actions"
-import { TOPICS, validateContact, type ContactErrors, type ContactField, type TopicId } from "@/lib/contact"
-import { projects } from "@/lib/content"
+import { BUDGETS, TIMELINES, TOPICS, validateContact, type ContactErrors, type ContactField, type TopicId } from "@/lib/contact"
+import { offers, projects, ui, workHref, type Lang } from "@/lib/content"
 import { site } from "@/lib/site"
 import type { Orb } from "@/components/orb"
 import { ArrowRight, ArrowUpRight, Check, Close, Copy, Expand, Github, Menu, Moon, Shrink, Sun } from "@/components/icons"
@@ -22,10 +24,21 @@ function on<E extends Event>(target: EventTarget, type: string, fn: (e: E) => vo
 // The browser bar follows the theme (dark by default)
 const paintBar = () => document.querySelector('meta[name="theme-color"]')?.setAttribute("content", root().dataset.theme === "light" ? "#faf9fc" : "#0a0a0d")
 
-// Header: blurs once scrolled, marks the section in view, scroll progress line, glow and theme switches
-const links = [["#work", "Work"], ["#services", "Services"], ["#about", "About"], ["#contact", "Contact"]] as const
+// The page's language and the same page in the other one: /fr and below is French, the rest English
+function useLang(): { lang: Lang; path: string; other: string } {
+  const path = usePathname() || "/", lang: Lang = path === "/fr" || path.startsWith("/fr/") ? "fr" : "en"
+  let other = lang === "fr" ? path.replace(/^\/fr/, "") || "/" : path === "/" ? "/fr" : path === "/support" ? path : `/fr${path}`
+  const slug = path.match(/\/services\/([^/]+)$/)?.[1], offer = slug && offers.find((o) => o[lang].slug === slug)
+  if (offer) other = lang === "fr" ? `/services/${offer.en.slug}` : `/fr/services/${offer.fr.slug}`
+  return { lang, path, other }
+}
+
+// Header: blurs once scrolled, marks the section in view, scroll progress line, glow, theme and language switches
+const SECTIONS = ["#work", "#services", "#about", "#contact"]
 
 export function Header() {
+  const { lang, path, other } = useLang(), t = ui[lang], homePath = lang === "fr" ? "/fr" : "/", onHome = path === homePath
+  const links = SECTIONS.map((id, i) => [onHome ? id : lang === "fr" ? `/fr${id}` : `/${id}`, t.nav[i], id] as const)
   const [scrolled, setScrolled] = useState(false), [open, setOpen] = useState(false), [active, setActive] = useState(""), [glow, setGlow] = useState(true)
   const bar = useRef<HTMLSpanElement>(null)
   useEffect(() => {
@@ -41,7 +54,7 @@ export function Header() {
     }
     const onScroll = () => { frame ||= requestAnimationFrame(update) }
     const io = new IntersectionObserver((entries) => entries.forEach((e) => e.isIntersecting && setActive(`#${e.target.id}`)), { rootMargin: "-45% 0px -50% 0px" })
-    for (const [href] of links) { const el = document.querySelector(href); if (el) io.observe(el) }
+    for (const id of SECTIONS) { const el = document.querySelector(id); if (el) io.observe(el) }
     update()
     const offs = [on(window, "scroll", onScroll, { passive: true }), on(window, "resize", onScroll)]
     return () => { io.disconnect(); cancelAnimationFrame(frame); offs.forEach((off) => off()) }
@@ -65,22 +78,23 @@ export function Header() {
   return (
     <header className={cn("fixed inset-x-0 top-0 z-50 border-b pt-[env(safe-area-inset-top)] transition-colors duration-300", scrolled || open ? "border-line bg-bg/80 backdrop-blur-xl" : "border-transparent")}>
       <div className="wrap flex h-16 items-center justify-between">
-        <a href="#top" aria-label={`${site.name}, back to top`} className="gradient-text text-[1.7rem] leading-none font-semibold tracking-tight transition-opacity hover:opacity-80">{site.name}</a>
+        <a href={onHome ? "#top" : homePath} aria-label={onHome ? `${site.name}, back to top` : site.name} className="gradient-text text-[1.7rem] leading-none font-semibold tracking-tight transition-opacity hover:opacity-80">{site.name}</a>
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-          {links.map(([href, label]) => <a key={href} href={href} className={cn("rounded-full px-4 py-2 text-sm transition-colors", active === href ? "bg-accent-soft text-fg" : "text-muted hover:text-fg")}>{label}</a>)}
+          {links.map(([href, label, id]) => <a key={id} href={href} className={cn("rounded-full px-4 py-2 text-sm transition-colors", active === id ? "bg-accent-soft text-fg" : "text-muted hover:text-fg")}>{label}</a>)}
         </nav>
         <div className="flex items-center gap-2">
           <button type="button" role="switch" aria-checked={glow} aria-label="Cursor glow" title="Cursor glow" onClick={flipGlow} className="hidden h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-sm text-muted transition hover:text-fg md:inline-flex pointer-coarse:hidden!">
             Glow<span className={cn("relative h-5 w-9 rounded-full transition-colors", glow ? "bg-accent" : "bg-line-strong")}><span className={cn("absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform", glow && "translate-x-4")} /></span>
           </button>
           <button type="button" onClick={flipTheme} aria-label="Switch between light and dark theme" title="Theme" className={cn(round, "text-muted transition hover:border-line-strong hover:text-fg")}><Moon className="dark:hidden" /><Sun className="hidden dark:block" /></button>
+          <a href={other} hrefLang={lang === "fr" ? "en" : "fr"} lang={lang === "fr" ? "en" : "fr"} aria-label={`${lang === "fr" ? "EN" : "FR"}, ${t.lang}`} title={t.lang} className={cn(round, "text-xs font-medium text-muted transition hover:border-line-strong hover:text-fg")}>{lang === "fr" ? "EN" : "FR"}</a>
           <button type="button" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} onClick={() => setOpen(!open)} className={cn(round, "md:hidden")}>{open ? <Close /> : <Menu />}</button>
         </div>
       </div>
       <span ref={bar} aria-hidden style={{ transform: "scaleX(0)" }} className="absolute inset-x-0 -bottom-px h-px origin-left bg-linear-to-r from-accent to-accent-2" />
       {open && (
         <nav aria-label="Mobile" className="wrap flex h-[calc(100dvh-4rem)] flex-col gap-1 pt-6 md:hidden">
-          {links.map(([href, label]) => <a key={href} href={href} onClick={() => setOpen(false)} className="display border-b border-line py-4 text-4xl">{label}</a>)}
+          {links.map(([href, label, id]) => <a key={id} href={href} onClick={() => setOpen(false)} className="display border-b border-line py-4 text-4xl">{label}</a>)}
         </nav>
       )}
     </header>
@@ -148,8 +162,12 @@ export function HeroOrb() {
 // which srcset width the browser picked, so it can't be trusted for layout
 const FIT = { panel: "w-[min(100%,70svh*var(--r))]", full: "w-[min(100cqw,100cqh*var(--r))]" }
 
+const isClip = (src: string) => src.endsWith(".mp4")
+
 function Shot({ src, title, fit, sizes, className, onLoaded, onClick }: { src: string; title: string; fit: keyof typeof FIT; sizes: string; className?: string; onLoaded?: () => void; onClick?: React.MouseEventHandler<HTMLElement> }) {
   const [ratio, setRatio] = useState(0) // width / height once loaded, -1 when the file is missing
+  if (ratio > -1 && isClip(src))
+    return <Clip src={src} title={title} onClick={onClick} onRatio={setRatio} onLoaded={onLoaded} style={{ "--r": ratio || undefined } as React.CSSProperties} className={cn("h-auto", FIT[fit], !ratio && "invisible", className)} />
   if (ratio < 0)
     return (
       <div role="img" aria-label={`${title} preview`} onClick={onClick} className={cn("grid aspect-[16/10] w-[40rem] max-w-full place-items-center rounded-xl bg-[linear-gradient(135deg,var(--accent-soft),transparent),var(--surface-2)]", className)}>
@@ -162,9 +180,30 @@ function Shot({ src, title, fit, sizes, className, onLoaded, onClick }: { src: s
   )
 }
 
+/** A short clip in a screenshot's place: muted, looping and inline, paused with reduced motion. It can load before the page
+ * is hydrated, so its size and first frame are also read when it mounts. */
+function Clip({ src, title, className, style, onClick, onRatio, onLoaded }: { src: string; title: string; className: string; style: React.CSSProperties; onClick?: React.MouseEventHandler<HTMLElement>; onRatio: (r: number) => void; onLoaded?: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null), told = useRef(false)
+  const sized = (v: HTMLVideoElement) => onRatio(v.videoWidth / v.videoHeight || 1.6)
+  const ready = () => { if (!told.current) { told.current = true; onLoaded?.() } }
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    v.muted = true
+    if (v.readyState >= 1) sized(v)
+    if (v.readyState >= 2) ready()
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {})
+  }, [])
+  return (
+    <video ref={ref} src={src} aria-label={`${title}, a short clip`} muted loop playsInline preload="auto" onClick={onClick} onLoadedMetadata={(e) => sized(e.currentTarget)} onLoadedData={ready}
+      onError={() => { onRatio(-1); ready() }} style={style} className={className} />
+  )
+}
+
 function Thumb({ src }: { src: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) return <span aria-hidden className="block size-full bg-accent-soft" />
+  if (isClip(src)) return <video src={`${src}#t=0.5`} muted playsInline preload="metadata" aria-hidden onError={() => setFailed(true)} className="absolute inset-0 size-full object-cover object-top" />
   return <Image src={src} alt="" fill sizes="140px" onError={() => setFailed(true)} className="object-cover object-top" />
 }
 
@@ -182,7 +221,8 @@ function useSwipe(handle: (dx: number, dy: number) => void) {
 }
 
 /** Projects on the left, the selected one on the right: one screenshot, a bar for each to switch, click for fullscreen. */
-export function Projects() {
+export function Projects({ lang = "en" }: { lang?: Lang }) {
+  const t = ui[lang]
   const [active, setActive] = useState(0), [shot, setShot] = useState(0), [open, setOpen] = useState(false)
   const p = projects[active], count = p.images.length
   const step = (d: number) => setShot((s) => (s + d + count) % count)
@@ -209,7 +249,7 @@ export function Projects() {
           <button key={x.id} role="tab" id={`tab-${x.id}`} aria-selected={active === i} aria-controls="project-panel" onClick={() => { setActive(i); setShot(0) }}
             className={cn("group flex cursor-pointer items-baseline gap-4 border-l-2 py-4 pr-2 pl-5 text-left transition", active === i ? "border-accent" : "border-line hover:border-line-strong")}>
             <span className={cn("font-mono text-xs transition", active === i ? "text-accent" : "text-faint")}>{String(i + 1).padStart(2, "0")}</span>
-            <span><span className={cn("block text-xl font-medium tracking-tight transition md:text-2xl", active === i ? "text-fg" : "text-muted group-hover:text-fg")}>{x.title}</span><span className="mt-0.5 block text-sm text-muted">{x.tagline}</span></span>
+            <span><span className={cn("block text-xl font-medium tracking-tight transition md:text-2xl", active === i ? "text-fg" : "text-muted group-hover:text-fg")}>{x.title}</span><span className="mt-0.5 block text-sm text-muted">{x[lang].tagline}</span></span>
           </button>
         ))}
       </div>
@@ -234,17 +274,24 @@ export function Projects() {
             </button>
           ))}
         </div>
-        <div key={p.id} className="fade mt-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-xl">
-            <h3 className="text-xl font-medium tracking-tight">{p.title}</h3>
-            <p className="mt-2 leading-relaxed text-muted">{p.description}</p>
-            <ul className="mt-4 flex flex-wrap gap-2" aria-label="Built with">{p.tags.map((t) => <li key={t} className="chip">{t}</li>)}</ul>
+        {/* Every project's text is in the page, the others hidden: search engines read all four, not only the first */}
+        {projects.map((x, i) => (
+          <div key={x.id} hidden={active !== i}>
+            <div className="fade mt-6 flex flex-col gap-6">
+              <div className="max-w-xl">
+                <h3 className="text-xl font-medium tracking-tight">{x.title}</h3>
+                <p className="mt-2 leading-relaxed text-muted">{x[lang].description}</p>
+                <ul className="mt-4 flex flex-wrap gap-2" aria-label="Built with">{x.tags.map((t) => <li key={t} className="chip">{t}</li>)}</ul>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-3">
+                {x.action && <a href={x.action.href} target="_blank" rel="noopener noreferrer" className="btn btn-primary">{x.action[lang]} <ArrowUpRight className="size-4" /></a>}
+                <a href={x.link} target="_blank" rel="noopener noreferrer" className={cn("btn", x.action ? "btn-ghost" : "btn-primary")}>{t.visit} <ArrowUpRight className="size-4" /></a>
+                <a href={workHref(lang, x.id)} className="btn btn-ghost">{t.caseStudy}</a>
+                <a href={x.github} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Github className="size-4" /> {t.source}</a>
+              </div>
+            </div>
           </div>
-          <div className="flex shrink-0 gap-3">
-            <a href={p.link} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Visit <ArrowUpRight className="size-4" /></a>
-            <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn btn-ghost"><Github className="size-4" /> Source</a>
-          </div>
-        </div>
+        ))}
       </div>
       {open && <Lightbox images={p.images} index={shot} title={p.title} onIndex={setShot} onClose={close} />}
     </div>
@@ -322,15 +369,19 @@ function Lightbox({ images, index, title, onIndex, onClose }: { images: readonly
 }
 
 // Services: "Start" pre-selects the topic in the contact form, then scrolls to it
-export function StartButton({ topic, title }: { topic: string; title: string }) {
+export function StartButton({ topic, title, label = "Start" }: { topic: string; title: string; label?: string }) {
   return (
-    <button type="button" aria-label={`Start a ${title} project`} onClick={() => { dispatchEvent(new CustomEvent("gz:topic", { detail: topic })); document.getElementById("contact")?.scrollIntoView() }}
-      className="group mt-8 inline-flex h-11 w-fit cursor-pointer items-center gap-1.5 text-sm font-medium text-accent">Start <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" /></button>
+    <button type="button" aria-label={`${label}: ${title}`} onClick={() => { dispatchEvent(new CustomEvent("gz:topic", { detail: topic })); document.getElementById("contact")?.scrollIntoView() }}
+      className="group mt-8 inline-flex h-11 w-fit cursor-pointer items-center gap-1.5 text-sm font-medium text-accent">{label} <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" /></button>
   )
 }
 
-export function ContactForm() {
-  const [errors, setErrors] = useState<ContactErrors>({}), [error, setError] = useState(""), [sent, setSent] = useState(false), [topic, setTopic] = useState<TopicId | "">("")
+export function ContactForm({ lang = "en", topic: initial = "" }: { lang?: Lang; topic?: string }) {
+  const t = ui[lang], w = lang === "fr"
+    ? { name: "Nom", email: "Courriel", message: "Message", budget: "Budget (facultatif)", timeline: "Échéancier (facultatif)", send: "Envoyer", sending: "Envoi…", sent: "Envoyé", thanks: "Merci, je vous réponds en moins d’un jour.", another: "Envoyer un autre message", re: "Sujet", remove: "Retirer le sujet", offline: `Le serveur ne répond pas. Écrivez-moi à ${site.email}.` }
+    : { name: "Name", email: "Email", message: "Message", budget: "Budget (optional)", timeline: "Timeline (optional)", send: "Send", sending: "Sending…", sent: "Sent", thanks: "Thanks, I’ll answer within a day.", another: "Send another", re: "Re", remove: "Remove topic", offline: `Couldn't reach the server. Please email me at ${site.email}.` }
+  const [errors, setErrors] = useState<ContactErrors>({}), [error, setError] = useState(""), [sent, setSent] = useState(false)
+  const [topic, setTopic] = useState<TopicId | "">(TOPICS.find((x) => x.id === initial && x.id !== "other")?.id ?? "")
   const [pending, start] = useTransition()
   useEffect(() => on<CustomEvent<string>>(window, "gz:topic", (e) => {
     const t = TOPICS.find((x) => x.id === e.detail)
@@ -338,25 +389,25 @@ export function ContactForm() {
   }), [])
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const form = e.currentTarget, input = { ...Object.fromEntries(new FormData(form)), topic }
+    const form = e.currentTarget, input = { ...Object.fromEntries(new FormData(form)), topic, lang }
     const { errors } = validateContact(input)
     setErrors(errors); setError("")
     if (Object.keys(errors).length) return
     start(async () => {
       try {
         const res = await sendContact(input)
-        if (res.ok) { form.reset(); setTopic(""); setSent(true) }
+        if (res.ok) { track("contact_sent", { topic: topic || "none", lang }); form.reset(); setTopic(""); setSent(true) }
         else setError(res.error)
-      } catch { setError(`Couldn't reach the server. Please email me at ${site.email}.`) }
+      } catch { setError(w.offline) }
     })
   }
   if (sent)
     return (
       <div className="pop grid min-h-[16rem] content-center justify-items-start gap-3" role="status">
         <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-accent"><Check className="size-5" /></span>
-        <h3 className="text-2xl font-medium tracking-tight">Sent</h3>
-        <p className="text-muted">Thanks, I&rsquo;ll get back to you soon.</p>
-        <button type="button" onClick={() => setSent(false)} className="btn btn-ghost mt-2 h-10 text-sm">Send another</button>
+        <h3 className="text-2xl font-medium tracking-tight">{w.sent}</h3>
+        <p className="text-muted">{w.thanks}</p>
+        <button type="button" onClick={() => setSent(false)} className="btn btn-ghost mt-2 h-10 text-sm">{w.another}</button>
       </div>
     )
   const field = (name: ContactField, label: string) => ({ name, placeholder: label, "aria-label": label, "aria-invalid": !!errors[name],
@@ -368,16 +419,26 @@ export function ContactForm() {
       <input type="checkbox" name="trap" tabIndex={-1} autoComplete="off" data-lpignore="true" data-1p-ignore aria-hidden className="absolute -left-[9999px] h-0 w-0 opacity-0" />
       {topic && (
         <p className="pop inline-flex items-center gap-2 rounded-full border border-accent-line bg-accent-soft py-1 pr-1 pl-3 text-sm text-accent">
-          Re: {TOPICS.find((t) => t.id === topic)?.label}<button type="button" aria-label="Remove topic" onClick={() => setTopic("")} className="grid size-6 cursor-pointer place-items-center rounded-full transition hover:bg-accent-soft"><Close className="size-3.5" /></button>
+          {w.re}: {TOPICS.find((x) => x.id === topic)?.[lang]}<button type="button" aria-label={w.remove} onClick={() => setTopic("")} className="grid size-6 cursor-pointer place-items-center rounded-full transition hover:bg-accent-soft"><Close className="size-3.5" /></button>
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div><input type="text" autoComplete="name" {...field("name", "Name")} />{hint("name")}</div>
-        <div><input type="email" autoComplete="email" {...field("email", "Email")} />{hint("email")}</div>
+        <div><input type="text" autoComplete="name" {...field("name", w.name)} />{hint("name")}</div>
+        <div><input type="email" autoComplete="email" {...field("email", w.email)} />{hint("email")}</div>
       </div>
-      <div><textarea rows={6} {...field("message", "Message")} />{hint("message")}</div>
+      <div><textarea rows={6} {...field("message", w.message)} />{hint("message")}</div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {([["budget", w.budget, BUDGETS], ["timeline", w.timeline, TIMELINES]] as const).map(([name, label, options]) => (
+          <select key={name} name={name} aria-label={label} defaultValue="" className="block w-full cursor-pointer rounded-xl border border-line bg-[color-mix(in_srgb,var(--surface)_50%,transparent)] px-4 py-3 text-base text-muted outline-none transition focus:border-accent focus:ring-4 focus:ring-accent-soft">
+            <option value="">{label}</option>
+            {options.map((o) => <option key={o.id} value={o.id}>{o[lang]}</option>)}
+          </select>
+        ))}
+      </div>
       <div className="flex flex-wrap items-center gap-4 pt-1">
-        <button type="submit" disabled={pending} className="btn btn-primary">{pending ? "Sending…" : <>Send <ArrowRight className="size-4" /></>}</button>
+        <button type="submit" disabled={pending} className="btn btn-primary">{pending ? w.sending : <>{w.send} <ArrowRight className="size-4" /></>}</button>
+        <p className="text-sm text-muted">{t.answer}</p>
+        {site.booking && <a href={site.booking} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-accent underline-offset-4 hover:underline">{t.book}</a>}
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       </div>
     </form>
@@ -393,4 +454,27 @@ export function CopyEmail({ email }: { email: string }) {
       <button type="button" onClick={copy} aria-label={done ? "Copied" : "Copy email address"} title={done ? "Copied" : "Copy email"} className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-accent-soft hover:text-accent">{done ? <Check className="text-accent" /> : <Copy />}</button>
     </p>
   )
+}
+
+/** The footer, in the page's language */
+export function SiteFooter() {
+  const { lang, other } = useLang(), t = ui[lang]
+  return (
+    <footer className="py-10">
+      <div className="wrap flex flex-col items-center justify-between gap-4 text-sm text-muted sm:flex-row">
+        <p>© {new Date().getFullYear()} {site.name}dev</p>
+        <p className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1">
+          <a href="/support" className="transition hover:text-fg">{t.support}</a>
+          <a href={site.repo} target="_blank" rel="noopener noreferrer" className="transition hover:text-fg">{t.source}</a>
+          <a href={other} hrefLang={lang === "fr" ? "en" : "fr"} lang={lang === "fr" ? "en" : "fr"} className="transition hover:text-fg">{t.lang}</a>
+          <a href="#top" className="transition hover:text-fg">{t.top} ↑</a>
+        </p>
+      </div>
+    </footer>
+  )
+}
+
+/** An outside link counted as an event (Vercel Web Analytics, anonymous) */
+export function TrackLink({ href, event, data, className, children }: { href: string; event: string; data?: Record<string, string>; className?: string; children: React.ReactNode }) {
+  return <a href={href} target="_blank" rel="noopener noreferrer" className={className} onClick={() => track(event, data)}>{children}</a>
 }

@@ -2,9 +2,11 @@
 
 # Gimzdev
 
-Portfolio site and project index.
+Portfolio and client-work site: case studies, services and prices, in English and French.
 
 [gimzdev.com](https://gimzdev.com) · Next.js · TypeScript · Tailwind CSS · Three.js
+
+<img src="docs/screenshots/gimzdev-preview.gif" alt="gimzdev.com, from the top to the projects">
 
 <table>
 <tr>
@@ -17,16 +19,18 @@ Portfolio site and project index.
 </tr>
 </table>
 
-This is my portfolio and the index of everything I build. It shows the projects with screenshots and
-links, what I can do for a client and roughly what it costs, and who I am. I make web apps and games, and
-take on consulting and fixes for existing codebases.
+<hr>
+
+This is my portfolio and where client work starts. It shows the five products I build and run, each with a
+case study, what I can build for a client with a "from" price, and who I am, in English and in Québec French.
 
 | | |
 |:---|:---|
-| **Work** | MetaForge, Mosaïk, Dropdate and Grimoire, with screenshots and links |
-| **Services** | Websites, web apps, fixes and updates, with typical prices and timelines |
-| **About** | Background, skills and a career timeline |
-| **Contact** | A message form, email, GitHub, X and Discord |
+| **Work** | Grimoire, MetaForge, Patchlab, Mosaïk and Dropdate, each with a clip, screenshots and a case study at `/work/<id>` with numbers and their source |
+| **Services** | A web app or companion tool, a fast website, fixes and updates, each with a "from" price and its own page at `/services/<slug>` |
+| **Français** | The whole site in Québec French at `/fr`, with hreflang both ways |
+| **Support** | `/support`: what support pays for, and the products it keeps free |
+| **Contact** | A message form with optional budget and timeline, email, GitHub, X and Discord |
 
 The page has a 3D hero, a cursor glow and light and dark themes. The contact form sends mail over SMTP,
 with the server and credentials kept out of the repository.
