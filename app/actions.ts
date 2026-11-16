@@ -3,7 +3,7 @@
 import nodemailer, { type Transporter } from "nodemailer"
 import { headers } from "next/headers"
 import { after } from "next/server"
-import { TOPICS, validateContact } from "@/lib/contact"
+import { BUDGETS, MIN_FILL_MS, TIMELINES, TOPICS, validateContact } from "@/lib/contact"
 import { site } from "@/lib/site"
 
 export type ContactResult = { ok: true } | { ok: false; error: string }
@@ -11,6 +11,8 @@ export type ContactResult = { ok: true } | { ok: false; error: string }
 // Five messages per hour per visitor. In memory: fine for one instance, use Redis/Upstash to share across many.
 const LIMIT = 5, WINDOW = 60 * 60 * 1000, seen = new Map<string, number[]>()
 let mailer: Transporter | undefined
+// What the form answers when it can't send
+const say = { many: "Too many messages. Please try again later.", check: "Please check the fields marked in red.", setup: `The form isn't set up yet. Email me at ${site.email} instead.`, failed: `Couldn't send that. Please email me at ${site.email}.` }
 
 // Email look: light, plain and readable. Table layout + inline styles so Gmail, Outlook and Apple Mail agree
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
@@ -37,46 +39,50 @@ function smtpError(error: unknown, user: string, pass: string) {
 }
 
 export async function sendContact(input: unknown): Promise<ContactResult> {
+  const { data, errors } = validateContact(input)
   const h = await headers(), visitor = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown"
   const now = Date.now(), recent = (seen.get(visitor) ?? []).filter((t) => now - t < WINDOW)
-  if (recent.length >= LIMIT) return { ok: false, error: "Too many messages. Please try again later." }
+  if (recent.length >= LIMIT) return { ok: false, error: say.many }
   seen.set(visitor, [...recent, now])
   if (seen.size > 10_000) for (const [k, t] of seen) if (now - t[t.length - 1] > WINDOW) seen.delete(k)
 
-  const { data, errors } = validateContact(input)
-  if (Object.keys(errors).length) return { ok: false, error: "Please check the highlighted fields." }
-  if (data.trap) { console.warn("Contact form: a bot ticked the hidden checkbox; nothing was sent."); return { ok: true } } // only a bot ticks it
+  if (Object.keys(errors).length) return { ok: false, error: say.check }
+  // Only a bot ticks the hidden checkbox or sends the form within two seconds of seeing it: it is told "sent", and nothing is
+  if (data.trap || data.elapsed < MIN_FILL_MS) { console.warn(`Contact form: a bot ${data.trap ? "ticked the hidden checkbox" : `sent the form after ${data.elapsed} ms`}; nothing was sent.`); return { ok: true } }
   const { EMAIL_HOST: host, EMAIL_PORT, EMAIL_SECURE, EMAIL_USER: user, EMAIL_PASSWORD: pass, EMAIL_FROM, EMAIL_TO } = process.env
   if (!host || !user || !pass) {
     console.error("Contact form: SMTP is not configured (EMAIL_HOST, EMAIL_USER and EMAIL_PASSWORD are missing).")
-    return { ok: false, error: `The form isn't set up yet. Email me at ${site.email} instead.` }
+    return { ok: false, error: say.setup }
   }
   const port = Number(EMAIL_PORT) || 587, secure = EMAIL_SECURE === "true", account = `${user} at ${host}:${port}`, from = EMAIL_FROM || site.email
   // Short timeouts: a stuck connection fails in seconds with a clear log line, instead of hanging the form
   const smtp = (mailer ??= nodemailer.createTransport({ host, port, secure, requireTLS: !secure, auth: { user, pass }, connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 20_000 }))
   const { name, email, message } = data, topic = TOPICS.find((t) => t.id === data.topic)?.label
+  const budget = BUDGETS.find((b) => b.id === data.budget)?.label, timeline = TIMELINES.find((x) => x.id === data.timeline)?.label
+  const extra = [budget && `Budget: ${budget}`, timeline && `Timeline: ${timeline}`].filter(Boolean).join(" · ")
   const first = /^[\p{L}\p{M}' .-]{1,40}$/u.test(name) ? name.split(" ")[0] : "there" // never echo links or other junk to a stranger's inbox
-  const when = new Date().toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Toronto" }), domain = site.url.replace(/^https?:\/\//, "")
+  const when = new Date().toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Toronto" }), domain = new URL(site.url).host.replace(/^www\./, "") // the site's name as people say it, with or without www in its address
 
   // Your copy first: the form only says "Sent" once it's on its way. Visitor addresses go in as address objects, never
   // read as a list of recipients
   try {
     await smtp.sendMail({ from: { name: `${site.name} Portfolio`, address: from }, to: EMAIL_TO || site.email, replyTo: { name, address: email }, subject: `New message from ${name}${topic ? ` · ${topic}` : ""}`,
-      text: `New message from ${name} <${email}>${topic ? `\nAbout: ${topic}` : ""}\n\n${message}\n\n${when}`,
+      text: `New message from ${name} <${email}>${topic ? `\nAbout: ${topic}` : ""}${extra ? `\n${extra}` : ""}\n\n${message}\n\n${when}`,
       html: shell(`${name}: ${message}`.slice(0, 110), `${title(esc(name))}
 <div style="margin:4px 0 0;font:15px ${FONT}">${link(`mailto:${email}`, esc(email))}${topic ? `<span style="color:#8a869a"> &nbsp;&middot;&nbsp; ${esc(topic)}</span>` : ""}</div>
+${extra ? `<div style="margin:6px 0 0;font:14px ${FONT};color:#8a869a">${esc(extra)}</div>` : ""}
 <div style="margin:22px 0 0">${box(message)}</div>
 <div style="margin:22px 0 0;font:600 15px ${FONT}">${link(`mailto:${email}?subject=${encodeURIComponent(`Re: ${topic || "your message"}`)}`, "Reply &rarr;")}</div>`, `Sent from the contact form on ${esc(domain)} &middot; ${esc(when)}`) })
   } catch (error) {
     console.error(`Contact form: SMTP send failed (${account}): ${smtpError(error, user, pass)}`)
-    return { ok: false, error: `Couldn't send that. Please email me at ${site.email}.` }
+    return { ok: false, error: say.failed }
   }
   console.info(`Contact form: sent (${account})`)
   // The visitor's confirmation is a courtesy: it goes out after the response, only once yours did, and a bounce never fails the form
   after(() => smtp.sendMail({ from: { name: site.name, address: from }, to: { name: "", address: email }, subject: "Thanks for your message",
-    text: `Hi ${first},\n\nThanks for reaching out. I've got your message and will reply as soon as I can.\n\nYour message:\n${message}\n\n${site.name}\n${site.url}`,
-    html: shell("Got it. I'll reply as soon as I can.", `${title(`Thanks, ${esc(first)}.`)}
-<p style="margin:10px 0 0;font:16px/1.65 ${FONT};color:#4a4658">I&rsquo;ve got your message and will reply as soon as I can.</p>
+    text: `Hi ${first},\n\nThanks for reaching out. I've got your message and will answer within a day.\n\nYour message:\n${message}\n\n${site.name}\n${site.url}`,
+    html: shell("Got it. I'll answer within a day.", `${title(`Thanks, ${esc(first)}.`)}
+<p style="margin:10px 0 0;font:16px/1.65 ${FONT};color:#4a4658">I&rsquo;ve got your message and will answer within a day.</p>
 <div style="margin:26px 0 8px;font:600 12px ${FONT};color:#8a869a">Your message</div>
 ${box(message.length > 700 ? `${message.slice(0, 700)}…` : message)}
 <p style="margin:26px 0 0;font:15px ${FONT};color:#1b1926">${esc(site.name)}<br>${link(site.url, esc(domain))}</p>`, `You&rsquo;re getting this because this address was used on the contact form at ${esc(domain)}. Reply to this email if you want to add something.`) })
